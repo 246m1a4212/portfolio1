@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Builder | Personal Portfolio</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --accent: #38bdf8;
+      --secondary: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding-bottom: 50px; }
+    header { height: 40vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(to bottom, #1e293b, var(--bg)); }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    h2 { margin: 40px 0 20px; border-left: 4px solid var(--accent); padding-left: 15px; font-size: 1.5rem; }
+    .controls { background: var(--card-bg); padding: 20px; border-radius: 12px; display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; border: 1px solid #334155; }
+    button { background: var(--accent); color: var(--bg); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: transform 0.2s, opacity 0.2s; }
+    button:hover { opacity: 0.9; transform: translateY(-2px); }
+    button.secondary { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .skill-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .card { background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid #334155; animation: fadeIn 0.4s ease-out; }
+    .skill-tag { background: #334155; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+    .skill-level { height: 6px; width: 50px; background: #475569; border-radius: 3px; overflow: hidden; }
+    .skill-progress { height: 100%; background: var(--accent); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 600px) { header { height: 30vh; } .controls { flex-direction: column; } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Creative Portfolio Builder</h1>
+    <p style="color: var(--secondary)">Build your professional identity dynamically.</p>
+  </header>
+
+  <div class="container">
+    <section>
+      <h2>Builder Toolkit</h2>
+      <div class="controls">
+        <button onclick="addSkill()">+ Add Skill</button>
+        <label style="background: var(--accent); color: var(--bg); padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+          + Upload Certificate
+          <input type="file" id="certificateInput" accept=".png,.jpg,.jpeg,.pdf" style="display:none" onchange="uploadCertificate(event)">
+        </label>
+        <button class="secondary" onclick="clearData()">Reset Portfolio</button>
+      </div>
+    </section>
+
+    <section id="skills-section">
+      <h2>Technical Skills</h2>
+      <div id="skills-container" class="skill-list"></div>
+    </section>
+
+    <section id="certificates-section">
+      <h2>Certificates</h2>
+      <div id="certificates-container" class="grid"></div>
+    </section>
+
+  </div>
+
+  <script>
+    let portfolioData = JSON.parse(localStorage.getItem('myPortfolio')) || {
+      skills: [],
+      certificates: [],
+      projects: []
+    };
+
+    window.onload = () => {
+      renderSkills();
+      renderCertificates();
+      
+    };
+
+    function addSkill() {
+      const name = prompt("Enter Skill Name (e.g., JavaScript):");
+      if (!name) return;
+      const level = prompt("Enter Proficiency % (0-100):", "80");
+      const newSkill = { id: Date.now(), name, level: level || 50 };
+      portfolioData.skills.push(newSkill);
+      saveAndRefresh();
+    }
+
+    function uploadCertificate(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const title = prompt("Certificate Title:");
+      if (!title) return;
+
+      const fileURL = URL.createObjectURL(file);
+      const newCertificate = {
+        id: Date.now(),
+        title,
+        fileName: file.name,
+        fileURL
+      };
+      portfolioData.certificates.push(newCertificate);
+      saveAndRefresh();
+    }
+
+    function renderSkills() {
+      const container = document.getElementById('skills-container');
+      container.innerHTML = '';
+      portfolioData.skills.forEach(skill => {
+        const div = document.createElement('div');
+        div.className = 'skill-tag';
+        div.innerHTML = `
+          <span>${skill.name}</span>
+          <div class="skill-level">
+            <div class="skill-progress" style="width: ${skill.level}%"></div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderCertificates() {
+      const container = document.getElementById('certificates-container');
+      container.innerHTML = '';
+      portfolioData.certificates.forEach(cert => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <h3>${cert.title}</h3>
+          <p style="color: var(--secondary); margin: 10px 0;">${cert.fileName}</p>
+          <a href="${cert.fileURL}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">View Certificate →</a>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderProjects() {
+      const container = document.getElementById('projects-container');
+      container.innerHTML = '';
+      portfolioData.projects.forEach(proj => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <h3>${proj.title}</h3>
+          <p style="color: var(--secondary); margin: 10px 0;">${proj.desc}</p>
+          <a href="${proj.link}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">View Project →</a>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function saveAndRefresh() {
+      localStorage.setItem('myPortfolio', JSON.stringify(portfolioData));
+      renderSkills();
+      renderCertificates();
+     
+    }
+
+    function clearData() {
+      if (confirm("Are you sure you want to clear your portfolio?")) {
+        localStorage.removeItem('myPortfolio');
+        portfolioData = { skills: [], certificates: [] };
+        renderSkills();
+        renderCertificates();
+        
+      }
+    }
+  </script>
+</body>
+</html>
